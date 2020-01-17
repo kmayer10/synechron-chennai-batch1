@@ -1,0 +1,94 @@
+---
+
+- name: my first play
+  hosts: demo
+  become: yes
+
+  tasks:
+    - name: Creating User
+      user:
+        name: kmayer
+        state: present
+        home: /home/demo
+      when: ansible_processor_cores >= 2
+
+- name: Installing packages
+  hosts: demo
+  become: yes
+  serial: 3
+  tasks:
+    - name: Installing GIT
+      package:
+        name:
+          - git
+          - java
+          - maven
+        state: present
+
+- name: Installing NTP
+  hosts: demo
+  become: yes
+
+  tasks:
+    - name: Installing NTP
+      package:
+        name: ntp
+        state: present
+
+    - name: Start NTPD
+      service:
+        name: ntpd
+        state: started
+        enabled: yes
+
+- name: Working with FILE Module
+  hosts: demo
+  become: yes
+
+  tasks:
+    - name: Creating a Directory
+      file:
+        path: /tmp/thinknyx-dir
+        mode: 755
+        state: directory
+
+    - name: Creating file
+      file:
+        path: /tmp/thinknyx-dir/thinknyx-demo.sh
+        mode: 755
+        owner: centos
+        group: users
+        state: touch
+
+- name: Copying file in /tmp/thinknyx-dir
+  hosts: demo
+  become: yes
+
+  tasks:
+    - name: Copy file
+      copy:
+        src: script.sh
+        dest: /tmp/thinknyx-dir/script.sh
+        owner: root
+        mode: 755
+
+      tags:
+        - first
+
+    - name: Execute the Shell Script Available on the Destination
+      command: sh /tmp/thinknyx-dir/script.sh
+      tags:
+        - first
+
+- name: Play to download file from url
+  hosts: demo
+  tags:
+    - get-url
+
+  become: yes
+
+  tasks:
+    - name: Demo for downloading file
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
